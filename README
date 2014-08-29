@@ -1,0 +1,27 @@
+To reproduce the bug (https://github.com/celery/billiard/pull/119):
+
+* You will need MySQL and redis server
+* Create a virtualenv and install requirements
+* Create the database (default use "testdb" on local MySQL)::
+
+    echo 'CREATE DATABASE testdb' | mysql -u root -ptest
+    python manage.py syncdb
+
+* start worker with::
+
+    celery -A simple_project worker -l info --concurrency=1
+
+* start a Django shell and MySQL shell
+
+* Submit a task using Django shell::
+
+    import simple_project.celery
+    simple_project.celery.take_time.delay()
+
+* Obviously task get killed in soft timeout.
+* Killed that will write result to backend. This open a DB connection
+* The DB connection is not closed.
+* Using MySQL shell, kill the DB connection (simulate drop connection after long inactivity)
+* Submit another task:
+    * The task will be ran... and finish ! (timeout won't stop it)
+* Now additionnal task won't be run.

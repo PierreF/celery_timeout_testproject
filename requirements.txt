@@ -1,0 +1,4 @@
+Django
+django-celery
+celery[redis]
+MySQL-Python
